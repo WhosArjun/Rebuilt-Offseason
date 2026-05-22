@@ -1,5 +1,5 @@
 package frc.robot.commands;
-import java.util.Timer;
+
 public class Trapezoidal {
     private double MAX_SPEED;
     private double MAX_ACCEL;
@@ -9,10 +9,11 @@ public class Trapezoidal {
     private double twoTriangleArea;
     private double Tmax;
     private double areaOfRectangle;
+    private double t;
     private double t1;
     
     public Trapezoidal(double MAX_SPEED, double MAX_ACCEL, double distance, double goalX
-                    , double Ta, double twoTriangleArea, double Tmax, double areaOfRectangle, double t1){
+                    , double Ta, double twoTriangleArea, double Tmax, double areaOfRectangle, double t1, double t){
         this.MAX_SPEED = MAX_SPEED;
         this.MAX_ACCEL = MAX_ACCEL;
         this.distance = distance;
@@ -22,15 +23,36 @@ public class Trapezoidal {
         this.Tmax = (goalX)/MAX_SPEED-Ta;
         this.areaOfRectangle = Tmax * MAX_SPEED;
         this.t1 = Ta+Tmax;
+        this.t = t;
     }
-        double trapezoidArea = twoTriangleArea+areaOfRectangle; //Area of the trapezoid 
+    double trapezoidArea = twoTriangleArea+areaOfRectangle; //Area of the trapezoid 
+
+    //MAX_SPEED
+    public double getMaxSpeed(){
+        return MAX_SPEED;
+    }
+    //MAX_ACCELERATION
+    public double getMaxAccel(){
+        return MAX_ACCEL;
+    }
+    //Base of the triangle
+    public double getTa(){
+        return Ta;
+    }
+    //Top width of the trapezoid
+    public double getTmax(){
+        return Tmax;
+    }
+    //Peak of the MAX_SPEED//ACCELERATION on the right side
+    public double getT1(){
+        return t1;
+    }
+    //t is time
+    public double getTime(){
+        return t;
+    }
         
-        //Piecewise function
-        public void speedFunctions(double t, double t1){
-            double accelerationFunction = MAX_ACCEL*t;  //Aceleration
-            double decelerationFunction = -MAX_ACCEL*(t-t1)+MAX_SPEED; //Deceleration
-            double pieceWiseFunctionThree = MAX_SPEED; //Constant speed
-        }
+        
       
     
 
