@@ -27,9 +27,9 @@ public class Trapezoidal {
         
         //Piecewise function
         public void speedFunctions(double t, double t1){
-            double pieceWiseFunctionOne = MAX_ACCEL*t;  //Aceleration
-            double pointSlopeFunction = -MAX_ACCEL*(t-t1)+MAX_SPEED; //Max Speed
-            double pieceWiseFunctionThree = MAX_SPEED; //Deceleration
+            double accelerationFunction = MAX_ACCEL*t;  //Aceleration
+            double decelerationFunction = -MAX_ACCEL*(t-t1)+MAX_SPEED; //Deceleration
+            double pieceWiseFunctionThree = MAX_SPEED; //Constant speed
         }
       
     
