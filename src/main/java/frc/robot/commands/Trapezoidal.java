@@ -62,7 +62,7 @@ public class Trapezoidal extends Command{
             accelerationFunction = getMaxAccel()*getTime();
             return accelerationFunction;
         }
-        else if(getTime()<getTmax()){// also wrong
+        else if(getTime()>getTa()&&getTime()<getTa()+getTmax()){// also wrong
             pieceWiseFunctionThree = getMaxSpeed();
             return pieceWiseFunctionThree;
         }
