@@ -39,7 +39,7 @@ public class RobotContainer {
                
   private SendableChooser<Command> autoChooser;
   public RobotContainer() {
-    SmartDashboard.putNumber("Joystick Degee", 2.0);
+    SmartDashboard.putNumber("Joystick Degree", 2.0);
     m_drivetrain = new Drivetrain();
     m_joystick = new Joystick(1);
     robotState = RobotState.NEUTRAL; //instantiate robotState 
