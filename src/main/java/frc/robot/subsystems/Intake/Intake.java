@@ -40,6 +40,7 @@ public class Intake extends SubsystemBase{
 
     @Override
     public void periodic(){
+        /* 
         RobotState state = robotStateSupplier.get();
 
         if(state == RobotState.INTAKE){
@@ -51,17 +52,6 @@ public class Intake extends SubsystemBase{
         else{
             stop();
         }
-    }
-
-    private void intake(){
-        intakeMotor.setPosition(Constants.INTAKE_DOWN_POSITION);
-        feederWheel.setVoltage(10);
-    }
-    private void outtake(){
-        feederWheel.setVoltage(-10);
-    }
-    private void stop(){
-        feederWheel.setVoltage(0);
-        intakeMotor.setVoltage(0);
+        */
     }
 }
