@@ -26,4 +26,12 @@ public final class Constants {
 
   public static Translation2d redHub = new Translation2d(11.901, 1.481); //red hub
   public static Translation2d blueHub = new Translation2d(11.901, 4.021); //blue hub
+
+  //INTAKE CONSTANTS
+  public static final double INTAKE_DOWN_POSITION = -6.3;
+
+
+  //OUTTAKE CONSTANTS
+  public static final double MAX_FLYWHEEL_VOLTAGE = 12;
+
 }
