@@ -4,12 +4,13 @@
 
 package frc.robot;
 import com.ctre.phoenix6.controls.MotionMagicDutyCycle;
-
+import com.ctre.phoenix6.controls.VelocityVoltage;
 
 import frc.robot.commands.DriveCommand;
 import frc.robot.commands.Trapezoidal;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Intake.Intake;
+import frc.robot.subsystems.Shooter.Shooter;
 import frc.robot.subsystems.Vision.VisionReal;
 import frc.robot.subsystems.Vision.VisionIO;
 import frc.robot.subsystems.Vision.VisionSim;
@@ -26,6 +27,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 
@@ -34,25 +37,41 @@ public class RobotContainer {
   
   public RobotState robotState; 
   public final Drivetrain m_drivetrain; 
+  public final Shooter m_shooter;
   public final Joystick m_joystick;
   public final VisionIO m_vision;
   public final DriveCommand m_driveCommand; 
-  public final Intake m_intake = new Intake(30,52, ()->robotState);
+  public final Intake m_intake;
+  public final Trigger alignTrigger;
+  public final Trigger indexTrigger;
+  public final Trigger shootTrigger;
+
+
+
 
   //ButtonBoards
-  public final Joystick m_buttonboardA = new Joystick(2);
+  public final Joystick m_buttonboardA;
 
   public final Trigger trapezoidalTrigger;
   public final Trapezoidal trapezoidalCommand;
-  public final Trigger intakeUp = new Trigger(() -> m_buttonboardA.getRawButton(15));
-  public final Trigger intakeDown = new Trigger(() -> m_buttonboardA.getRawButton(16));
+  public final Trigger intakeUp;
+  public final Trigger intakeDown;
+  
                
   private SendableChooser<Command> autoChooser;
+  private final Command shootCommand;
   public RobotContainer() {
+    m_buttonboardA = new Joystick(2);
     SmartDashboard.putNumber("Joystick Degree", 2.0);
+    m_shooter = new Shooter(58, 36);
     m_drivetrain = new Drivetrain();
     m_joystick = new Joystick(1);
-    m_buttonboardA.getRawButton(21);
+    shootTrigger = new Trigger(() -> m_buttonboardA.getRawButton(7));
+    alignTrigger = new Trigger(() -> m_joystick.getRawButton(6));
+    indexTrigger = new Trigger(() -> m_buttonboardA.getRawButton(5));
+    m_intake = new Intake(30, 52, ()-> robotState);
+    intakeUp = new Trigger(() -> m_buttonboardA.getRawButton(15));
+    intakeDown = new Trigger(() -> m_buttonboardA.getRawButton(16));
     robotState = RobotState.NEUTRAL; //instantiate robotState 
     trapezoidalTrigger = new Trigger(() -> m_joystick.getRawButton(6));
     // if(Robot.currentMode){
@@ -73,6 +92,21 @@ public class RobotContainer {
                                       () -> {return -m_joystick.getRawAxis(0);},
                                       () -> {return -m_joystick.getRawAxis(2);}
                                      ); 
+
+    
+    shootCommand = new ParallelCommandGroup (
+                Commands.run(() -> m_shooter.shooterMotor.setControl(new VelocityVoltage(m_drivetrain.distanceToRPM()))),
+                new SequentialCommandGroup(
+                    Commands.waitSeconds(1.067),//  TEST TS
+                    Commands.run(() -> m_shooter.indexMotor.setVoltage(Constants.MAX_INDEX_VOLTAGE))
+                )
+            ).finallyDo((x)->{m_shooter.shooterMotor.set(0); m_shooter.indexMotor.set(0);});
+    shootCommand.addRequirements(m_shooter);
+
+    NamedCommands.registerCommand("Shoot", Commands.run(() -> m_shooter.shooterMotor.setControl(new VelocityVoltage(47.6))).finallyDo(() -> m_shooter.shooterMotor.setControl(new VelocityVoltage(0))));
+    NamedCommands.registerCommand("Shoot2", Commands.run(() -> m_shooter.shooterMotor.setControl(new VelocityVoltage(48.2))).finallyDo(() -> m_shooter.shooterMotor.setControl(new VelocityVoltage(0))));
+
+     NamedCommands.registerCommand("Index", Commands.run(() -> m_shooter.indexMotor.setVoltage(Constants.MAX_INDEX_VOLTAGE)).finallyDo(() -> m_shooter.indexMotor.setVoltage(0)));
 
     NamedCommands.registerCommand("Intake", Commands.run(()-> {
       m_intake.intakeMotor.setControl(new MotionMagicDutyCycle(Constants.INTAKE_DOWN_POSITION));
@@ -95,6 +129,30 @@ public class RobotContainer {
     m_drivetrain.setDefaultCommand(m_driveCommand);
 
     trapezoidalTrigger.whileTrue(trapezoidalCommand);
+
+    intakeUp.whileTrue(Commands.run(()-> {
+      m_intake.intakeMotor.setControl(new MotionMagicDutyCycle(0));
+      m_intake.feederWheel.set(0);
+    }));
+
+    intakeUp.or(intakeDown).whileFalse(Commands.run(()-> {
+      m_intake.intakeMotor.setControl(new MotionMagicDutyCycle(m_intake.intakeMotor.getPosition().getValueAsDouble()));
+      m_intake.feederWheel.set(0);
+    }, m_intake));
+
+    intakeDown.whileTrue(Commands.run(()-> {
+      m_intake.intakeMotor.setControl(new MotionMagicDutyCycle(Constants.INTAKE_DOWN_POSITION));
+      m_intake.feederWheel.set((Math.abs(m_intake.intakeMotor.getPosition().getValueAsDouble()-Constants.INTAKE_DOWN_POSITION<.7?Constants.MAX_FLYWHEEL_VOLTAGE:0)));
+    }, m_intake));
+
+    alignTrigger.whileTrue(Commands.runOnce(() -> robotState = RobotState.SHOOT));
+
+    indexTrigger.whileTrue(Commands.run(() -> m_shooter.indexMotor.setVoltage(Constants.MAX_INDEX_VOLTAGE)));
+    indexTrigger.onFalse(Commands.runOnce(() -> m_shooter.indexMotor.setVoltage(0)));
+
+    shootTrigger.whileTrue(Commands.run(() -> m_shooter.shooterMotor.setControl(new VelocityVoltage(48.2)), m_shooter));
+    shootTrigger.onFalse(Commands.runOnce(() -> m_shooter.shooterMotor.setControl(new VelocityVoltage(0))));
+
   }
   
 
@@ -106,7 +164,9 @@ public class RobotContainer {
   public enum RobotState{
     NEUTRAL,
     INTAKE,
-    OUTTAKE;
+    OUTTAKE,
+    SHOOT;
+    
   }
 }
 

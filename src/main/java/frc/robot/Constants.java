@@ -33,5 +33,7 @@ public final class Constants {
 
   //OUTTAKE CONSTANTS
   public static final double MAX_FLYWHEEL_VOLTAGE = 12;
+  public static final double MAX_INDEX_VOLTAGE = 6;
+
 
 }

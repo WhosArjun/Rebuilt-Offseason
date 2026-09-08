@@ -12,7 +12,10 @@ import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import swervelib.SwerveDrive;
@@ -91,5 +94,34 @@ public class Drivetrain extends SubsystemBase{
 
     public void updateOdom(){
         visionEstimator.update(getGyroRotation(), swerveDrive.getModulePositions());
+    }
+
+    public double distance(){
+    Pose2d currentPose = visionEstimator.getEstimatedPosition();
+    double x = currentPose.getX();
+    SmartDashboard.putNumber("botx", x);
+    double y = currentPose.getY();
+    SmartDashboard.putNumber("boty", y);
+    if(DriverStation.getAlliance().get()==Alliance.Blue){
+      SmartDashboard.putNumber("distance", Math.sqrt(Math.pow((x-Constants.blueHub.getX()),2) + Math.pow((y-Constants.blueHub.getY()),2)));
+        return Math.sqrt(Math.pow((x-Constants.blueHub.getX()),2) + Math.pow((y-Constants.blueHub.getY()),2));
+    }
+        else{
+          SmartDashboard.putNumber("distance", Math.sqrt((x-Constants.redHub.getX())*(x-Constants.redHub.getX())+(y-Constants.redHub.getY())*(y-Constants.redHub.getY())));
+      return Math.sqrt((x-Constants.redHub.getX())*(x-Constants.redHub.getX())+(y-Constants.redHub.getY())*(y-Constants.redHub.getY()));
+        }
+    }
+
+
+    public double distanceToRPM(){
+      double[] function = {33.37143, 9.48571};//0th coeff, 1st, 2nd, etc
+      // double distance = distance();
+      double distance = distance();
+      double sum = 0;
+      for(int i = 0;i < function.length; i++){
+        sum += function[i]*Math.pow(distance,i);
+      }
+      SmartDashboard.putNumber("regression Output", sum);
+      return sum;
     }
 }
